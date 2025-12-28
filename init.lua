@@ -145,6 +145,7 @@ function show_gui()
 	end
 	if stepping_remaining_frames > 0 then
 		stepping_remaining_frames = stepping_remaining_frames - 1
+		unfreeze()
 	end
 end
 
