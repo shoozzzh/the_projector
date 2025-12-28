@@ -55,6 +55,10 @@ local translations = {
 		["English"] = "Stop",
 		["简体中文"] = "停止",
 	},
+	free_camera = {
+		["English"] = "WASD Free Camera(Buggy)",
+		["简体中文"] = "WASD 移动视角(有bug)",
+	},
 }
 
 local text = {}
@@ -68,6 +72,7 @@ end
 
 local step_by_n_frames = 1
 local stepping_remaining_frames = -1
+local free_camera = false
 
 function show_gui()
 	if not ModSettingGet( "the_projector.gui_visible" ) then
@@ -89,27 +94,25 @@ function show_gui()
 			if imgui.Button( text.stop_stepping_button ) then
 				stepping_remaining_frames = 0
 			end
-		else
-			if is_frozen then
-				if imgui.Button( text.unfreeze_button ) then
-					unfreeze()
-				end
-			else
-				if imgui.Button( text.freeze_button ) then
-					freeze()
-				end
+		elseif is_frozen then
+			if imgui.Button( text.unfreeze_button ) then
+				unfreeze()
 			end
 
-			if is_frozen then
-				if imgui.Button( text.step_by_button ) then
-					stepping_remaining_frames = step_by_n_frames
-					unfreeze()
-				end
-				imgui.SameLine()
-				imgui.SetNextItemWidth(120)
-				_, step_by_n_frames = imgui.InputInt( "", step_by_n_frames )
-				imgui.SameLine()
-				imgui.Text( text.n_frames )
+			if imgui.Button( text.step_by_button ) then
+				stepping_remaining_frames = step_by_n_frames
+				unfreeze()
+			end
+			imgui.SameLine()
+			imgui.SetNextItemWidth(120)
+			_, step_by_n_frames = imgui.InputInt( "", step_by_n_frames )
+			imgui.SameLine()
+			imgui.Text( text.n_frames )
+
+			_, free_camera = imgui.Checkbox( text.free_camera, free_camera )
+		else
+			if imgui.Button( text.freeze_button ) then
+				freeze()
 			end
 		end
 		imgui.End()
@@ -125,9 +128,37 @@ function show_gui()
 	end
 end
 
+local keycodes = {
+	Key_w = 26,
+	Key_a = 4,
+	Key_s = 22,
+	Key_d = 7,
+}
+
+function free_camera_update()
+	local x, y = GameGetCameraPos()
+	local speed = 10
+	if InputIsKeyDown( keycodes.Key_w ) then
+		y = y - speed
+	end
+	if InputIsKeyDown( keycodes.Key_s ) then
+		y = y + speed
+	end
+	if InputIsKeyDown( keycodes.Key_a ) then
+		x = x - speed
+	end
+	if InputIsKeyDown( keycodes.Key_d ) then
+		x = x + speed
+	end
+	GameSetCameraPos( x, y )
+end
+
 OnWorldPreUpdate = show_gui
 function OnPausePreUpdate()
 	if np.GetPauseState() <= 1 then
 		show_gui()
+	end
+	if free_camera then
+		free_camera_update()
 	end
 end
