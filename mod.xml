@@ -1,5 +1,5 @@
 <Mod
     name="The Projector 放映机"
-    description="A mod for playing/inspecting Noita frame by frame.\n一个逐帧播放 Noita 的模组。"
+    description="A mod for playing/inspecting Noita frame by frame.\nIts gui can be turned on/off in mod settings\n一个逐帧播放 Noita 的模组。它的界面可以在模组设置中开关"
     request_no_api_restrictions="1">
 </Mod>
