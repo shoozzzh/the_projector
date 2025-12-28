@@ -98,6 +98,10 @@ function get_pause_state_text( state )
 end
 
 function show_gui()
+	if not ModSettingGet( "the_projector.gui_visible" ) then
+		return
+	end
+
 	local pause_state = get_pause_state()
 
 	if imgui.Begin( text.title ) then
