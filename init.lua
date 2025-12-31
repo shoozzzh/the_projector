@@ -36,6 +36,9 @@ local update_breakpointed = {}
 local current_breakpoint = nil
 local num_updates = #updates.list
 
+local window_open_update_list = false
+local window_open_breakpoint_list = false
+
 for i, _ in ipairs( updates.list ) do
 	update_enabled[ i ] = true
 end
@@ -48,6 +51,12 @@ function show_gui()
 	local is_frozen = get_is_frozen()
 
 	if imgui.Begin( text.title ) then
+		_, window_open_update_list = imgui.Checkbox( text.title_update_list, window_open_update_list )
+		imgui.SameLine()
+		_, window_open_breakpoint_list = imgui.Checkbox( text.title_breakpoint_list, window_open_breakpoint_list )
+
+		imgui.Separator()
+
 		imgui.Text( text.current_frame )
 		imgui.SameLine()
 		imgui.Text( string.format( "%.f", GameGetFrameNum() ) )
@@ -61,7 +70,7 @@ function show_gui()
 				stepping_remaining_frames = 0
 			end
 		elseif is_frozen then
-			if imgui.Button( text.unfreeze_button ) then
+			if imgui.Button( text.button_unfreeze ) then
 				unfreeze()
 			end
 
@@ -77,18 +86,20 @@ function show_gui()
 
 			_, free_camera = imgui.Checkbox( text.free_camera, free_camera )
 		else
-			if imgui.Button( text.freeze_button ) then
+			if imgui.Button( text.button_freeze ) then
 				freeze()
 			end
 		end
+
 		imgui.End()
 	end
-	if imgui.Begin( text.title_update_list ) then
+
+	if window_open_update_list and imgui.Begin( string.format( "%s - %s", text.title, text.title_update_list ) ) then
 		local table_flags = bit.bor( imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg )
 		if imgui.BeginTable( "updates_table", 4, table_flags ) then
-			imgui.TableSetupColumn( text.number_column, imgui.TableColumnFlags.WidthFixed )
-			imgui.TableSetupColumn( text.enabled_column, imgui.TableColumnFlags.WidthFixed )
-			imgui.TableSetupColumn( text.name_column, imgui.TableColumnFlags.WidthStretch, 6 )
+			imgui.TableSetupColumn( text.column_number, imgui.TableColumnFlags.WidthFixed )
+			imgui.TableSetupColumn( text.column_enabled, imgui.TableColumnFlags.WidthFixed )
+			imgui.TableSetupColumn( text.column_name, imgui.TableColumnFlags.WidthStretch, 6 )
 			imgui.TableSetupColumn( text.breakpoint_column, imgui.TableColumnFlags.WidthFixed )
 			imgui.TableHeadersRow()
 
@@ -118,14 +129,23 @@ function show_gui()
 		imgui.End()
 	end
 
-	if imgui.Begin( text.title_breakpoint_list ) then
+	if window_open_breakpoint_list and imgui.Begin( string.format( "%s - %s", text.title, text.title_breakpoint_list ) ) then
+		local empty = true
+
 		for i, name in ipairs( updates.list ) do
 			if i == current_breakpoint then
 				imgui.TextColored( 0.1, 0.9, 0.1, 1, string.format( ">> %d. %s", i, name ) )
+				empty = false
 			elseif update_breakpointed[ i ] then
 				imgui.Text( string.format( "%d. %s", i, name ) )
+				empty = false
 			end
 		end
+
+		if empty then
+			imgui.Text( "No breakpoints set." )
+		end
+
 		imgui.End()
 	end
 

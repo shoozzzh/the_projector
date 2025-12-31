@@ -15,11 +15,11 @@ return {
 		["English"] = "Not paused",
 		["简体中文"] = "当前未暂停",
 	},
-	freeze_button = {
+	button_freeze = {
 		["English"] = "Freeze",
 		["简体中文"] = "暂停",
 	},
-	unfreeze_button = {
+	button_unfreeze = {
 		["English"] = "Unfreeze",
 		["简体中文"] = "取消暂停",
 	},
@@ -44,22 +44,18 @@ return {
 		["简体中文"] = "WASD 移动视角(有bug)",
 	},
 	title_update_list = {
-		["English"] = "The Projector - Update List",
-		["简体中文"] = "放映机 - 更新列表",
+		["English"] = "Update List",
+		["简体中文"] = "更新列表",
 	},
-	show_all_updates = {
-		["English"] = "Show full list",
-		["简体中文"] = "显示完整列表",
-	},
-	number_column = {
+	column_number = {
 		["English"] = "No.",
 		["简体中文"] = "序号",
 	},
-	enabled_column = {
+	column_enabled = {
 		["English"] = "Enabled",
 		["简体中文"] = "启用",
 	},
-	name_column = {
+	column_name = {
 		["English"] = "Name",
 		["简体中文"] = "名称",
 	},
@@ -68,7 +64,7 @@ return {
 		["简体中文"] = "断点",
 	},
 	title_breakpoint_list = {
-		["English"] = "The Projector - Breakpoint List",
-		["简体中文"] = "放映机 - 断点列表",
+		["English"] = "Breakpoints",
+		["简体中文"] = "断点列表",
 	},
 }
