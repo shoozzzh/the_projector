@@ -1,9 +1,8 @@
 local mod_path = "mods/the_projector/"
 
-local imgui = load_imgui({ version = "1.25.3", mod = "the_projector" })
-
 dofile_once( mod_path .. "NoitaPatcher/load.lua" )
 local np = require( "noitapatcher" )
+
 function freeze()
 	np.SetPauseState( bit.bor( np.GetPauseState(), 1 ) )
 end
@@ -14,65 +13,32 @@ function get_is_frozen()
 	return np.GetPauseState() % 2 == 1
 end
 
-local translations = {
-	title = {
-		["English"] = "The Projector",
-		["简体中文"] = "放映机",
-	},
-	current_frame = {
-		["English"] = "Frame Num:",
-		["简体中文"] = "当前帧编号:",
-	},
-	paused = {
-		["English"] = "Paused",
-		["简体中文"] = "当前已暂停",
-	},
-	not_paused = {
-		["English"] = "Not paused",
-		["简体中文"] = "当前未暂停",
-	},
-	freeze_button = {
-		["English"] = "Freeze",
-		["简体中文"] = "暂停",
-	},
-	unfreeze_button = {
-		["English"] = "Unfreeze",
-		["简体中文"] = "取消暂停",
-	},
-	step_by_button = {
-		["English"] = "Step by",
-		["简体中文"] = "步进",
-	},
-	n_frames = {
-		["English"] = "frames",
-		["简体中文"] = "帧",
-	},
-	stepping = {
-		["English"] = "Stepping......",
-		["简体中文"] = "步进中......",
-	},
-	stop_stepping_button = {
-		["English"] = "Stop",
-		["简体中文"] = "停止",
-	},
-	free_camera = {
-		["English"] = "WASD Free Camera(Buggy)",
-		["简体中文"] = "WASD 移动视角(有bug)",
-	},
-}
+local systems = dofile_once( mod_path .. "systems.lua" )
+local updates = dofile_once( mod_path .. "updates.lua" )
 
 local text = {}
 do
-	local current_lang = GameTextGet( "$current_language" )
+	local translations = dofile_once( mod_path .. "translations.lua" )
+	-- local current_lang = GameTextGet( "$current_language" )
 	for key, lang_table in pairs( translations ) do
 		-- text[ key ] = lang_table[ current_lang ] or lang_table[ "English" ]
 		text[ key ] = lang_table[ "English" ]
 	end
 end
 
+local imgui = load_imgui({ version = "1.25.3", mod = "the_projector" })
+
 local step_by_n_frames = 1
 local stepping_remaining_frames = -1
 local free_camera = false
+local update_enabled = {}
+local update_breakpointed = {}
+local current_breakpoint = nil
+local num_updates = #updates.list
+
+for i, _ in ipairs( updates.list ) do
+	update_enabled[ i ] = true
+end
 
 function show_gui()
 	if not ModSettingGet( "the_projector.gui_visible" ) then
@@ -84,7 +50,7 @@ function show_gui()
 	if imgui.Begin( text.title ) then
 		imgui.Text( text.current_frame )
 		imgui.SameLine()
-		imgui.Text( ("%.f"):format( GameGetFrameNum() ) )
+		imgui.Text( string.format( "%.f", GameGetFrameNum() ) )
 
 		imgui.Text( is_frozen and text.paused or text.not_paused )
 
@@ -117,14 +83,62 @@ function show_gui()
 		end
 		imgui.End()
 	end
+	if imgui.Begin( text.title_update_list ) then
+		local table_flags = bit.bor( imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg )
+		if imgui.BeginTable( "updates_table", 4, table_flags ) then
+			imgui.TableSetupColumn( text.number_column, imgui.TableColumnFlags.WidthFixed )
+			imgui.TableSetupColumn( text.enabled_column, imgui.TableColumnFlags.WidthFixed )
+			imgui.TableSetupColumn( text.name_column, imgui.TableColumnFlags.WidthStretch, 6 )
+			imgui.TableSetupColumn( text.breakpoint_column, imgui.TableColumnFlags.WidthFixed )
+			imgui.TableHeadersRow()
 
-	if stepping_remaining_frames == 0 then
-		stepping_remaining_frames = -1
-		freeze()
+			for i, name in ipairs( updates.list ) do
+				imgui.PushID( name )
+
+				imgui.TableNextColumn()
+				imgui.Text( tostring( i ) )
+
+				imgui.TableNextColumn()
+				_, update_enabled[ i ] = imgui.Checkbox( "", update_enabled[ i ] )
+
+				imgui.TableNextColumn()
+				imgui.Text( name )
+
+				imgui.TableNextColumn()
+				_, update_breakpointed[ i ] = imgui.Checkbox( text.breakpoint_column, update_breakpointed[ i ] == true )
+
+				if update_breakpointed[ i ] then
+					imgui.TableSetBgColor( imgui.TableBgTarget.RowBg1, 0.5, 0.1, 0.1, 1 )
+				end
+
+				imgui.PopID()
+			end
+			imgui.EndTable()
+		end
+		imgui.End()
 	end
+
+	if imgui.Begin( text.title_breakpoint_list ) then
+		for i, name in ipairs( updates.list ) do
+			if i == current_breakpoint then
+				imgui.TextColored( 0.1, 0.9, 0.1, 1, string.format( ">> %d. %s", i, name ) )
+			elseif update_breakpointed[ i ] then
+				imgui.Text( string.format( "%d. %s", i, name ) )
+			end
+		end
+		imgui.End()
+	end
+
+	step_logic()
+end
+
+function step_logic()
 	if stepping_remaining_frames > 0 then
 		stepping_remaining_frames = stepping_remaining_frames - 1
 		unfreeze()
+	elseif stepping_remaining_frames == 0 then
+		stepping_remaining_frames = -1
+		freeze()
 	end
 end
 
@@ -153,7 +167,36 @@ function free_camera_update()
 	GameSetCameraPos( x, y )
 end
 
-OnWorldPreUpdate = show_gui
+function OnWorldPreUpdate()
+	show_gui()
+
+	local last_breakpoint = current_breakpoint or 0
+	current_breakpoint = nil
+	for i = last_breakpoint + 1, num_updates do
+		if update_breakpointed[ i ] then
+			current_breakpoint = i
+			break
+		end
+	end
+
+	for i, name in ipairs( updates.list ) do
+		local enabled = update_enabled[ i ]
+
+		if last_breakpoint ~= nil then
+			enabled = enabled and last_breakpoint <= i
+		end
+
+		if current_breakpoint ~= nil then
+			enabled = enabled and i < current_breakpoint
+		end
+
+		updates.set_enabled( name, enabled )
+	end
+
+	if current_breakpoint ~= nil then
+		freeze()
+	end
+end
 function OnPausePreUpdate()
 	if np.GetPauseState() <= 1 then
 		show_gui()

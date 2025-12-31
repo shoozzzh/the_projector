@@ -237,15 +237,13 @@ struct CLiquidCell {
     struct Cell cell;
     int x;
     int y;
-    char unknown1; // 0x20
+    char unknown1;
     char unknown2;
     bool is_static;
     char unknown3;
-    float unknown4; // 0x24
-    float unknown5; // 0x28
-    float unknown6;
+    int unknown4[3];
     struct Colour colour;
-    struct Colour original_colour;
+    unsigned not_colour;
 };
 
 typedef struct Cell (*cell_array)[0x40000];
