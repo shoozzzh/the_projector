@@ -75,4 +75,8 @@ return {
 		["English"] = "Breakpoints",
 		["简体中文"] = "断点列表",
 	},
+	checkbox_enable_breakpoints = {
+		["English"] = "Enable Breakpoints",
+		["简体中文"] = "启用断点",
+	},
 }

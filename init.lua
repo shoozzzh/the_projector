@@ -35,6 +35,7 @@ local slowdown_by_n_times = 4
 local slowdown_counter = 0
 local free_camera = false
 local update_enabled = {}
+local enable_breakpoints = true
 local update_breakpointed = {}
 local current_breakpoint = nil
 local num_updates = #updates.list
@@ -150,20 +151,25 @@ function show_gui()
 	end
 
 	if window_open_breakpoint_list and imgui.Begin( string.format( "%s - %s", text.title, text.title_breakpoint_list ) ) then
-		local empty = true
+		_, enable_breakpoints = imgui.Checkbox( text.checkbox_enable_breakpoints, enable_breakpoints )
 
-		for i, name in ipairs( updates.list ) do
-			if i == current_breakpoint then
-				imgui.TextColored( 1, 0, 0, 1, string.format( ">> %d. %s", i, name ) )
-				empty = false
-			elseif update_breakpointed[ i ] then
-				imgui.Text( string.format( "%d. %s", i, name ) )
-				empty = false
+		if imgui.BeginChild( "breakpoint_list" ) then
+			local empty = true
+
+			for i, name in ipairs( updates.list ) do
+				if i == current_breakpoint then
+					imgui.TextColored( 1, 0, 0, 1, string.format( ">> %d. %s", i, name ) )
+					empty = false
+				elseif update_breakpointed[ i ] then
+					imgui.Text( string.format( "%d. %s", i, name ) )
+					empty = false
+				end
 			end
-		end
 
-		if empty then
-			imgui.Text( "No breakpoints set." )
+			if empty then
+				imgui.Text( "No breakpoints set." )
+			end
+			imgui.EndChild()
 		end
 
 		imgui.End()
@@ -228,10 +234,12 @@ function OnWorldPreUpdate()
 
 	local last_breakpoint = current_breakpoint or 0
 	current_breakpoint = nil
-	for i = last_breakpoint + 1, num_updates do
-		if update_breakpointed[ i ] then
-			current_breakpoint = i
-			break
+	if enable_breakpoints then
+		for i = last_breakpoint + 1, num_updates do
+			if update_breakpointed[ i ] then
+				current_breakpoint = i
+				break
+			end
 		end
 	end
 
