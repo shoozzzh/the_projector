@@ -30,6 +30,9 @@ local imgui = load_imgui({ version = "1.25.3", mod = "the_projector" })
 
 local step_by_n_frames = 1
 local stepping_remaining_frames = -1
+local slowdown_enabled = false
+local slowdown_by_n_times = 4
+local slowdown_counter = 0
 local free_camera = false
 local update_enabled = {}
 local update_breakpointed = {}
@@ -91,6 +94,14 @@ function show_gui()
 			end
 		end
 
+		_, slowdown_enabled = imgui.Checkbox( text.checkbox_slowdown, slowdown_enabled )
+		imgui.SameLine()
+		imgui.SetNextItemWidth(120)
+		_, slowdown_by_n_times = imgui.InputInt( "", slowdown_by_n_times )
+		slowdown_by_n_times = math.max( 2, slowdown_by_n_times )
+		imgui.SameLine()
+		imgui.Text( text.n_times )
+
 		imgui.End()
 	end
 
@@ -98,7 +109,7 @@ function show_gui()
 		local table_flags = bit.bor( imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg )
 		if imgui.BeginTable( "updates_table", 4, table_flags ) then
 			imgui.TableSetupColumn( text.column_number, imgui.TableColumnFlags.WidthFixed )
-			imgui.TableSetupColumn( text.column_enabled, imgui.TableColumnFlags.WidthFixed )
+			imgui.TableSetupColumn( text.column_state, imgui.TableColumnFlags.WidthFixed )
 			imgui.TableSetupColumn( text.column_name, imgui.TableColumnFlags.WidthStretch, 6 )
 			imgui.TableSetupColumn( text.breakpoint_column, imgui.TableColumnFlags.WidthFixed )
 			imgui.TableHeadersRow()
@@ -192,8 +203,24 @@ function free_camera_update()
 	GameSetCameraPos( x, y )
 end
 
+local function disable_all_updates()
+	for i, name in ipairs( updates.list ) do
+		updates.set_enabled( name, false )
+	end
+end
+
 function OnWorldPreUpdate()
 	show_gui()
+
+	if slowdown_enabled then
+		slowdown_counter = slowdown_counter + 1
+		if slowdown_counter < slowdown_by_n_times then
+			disable_all_updates()
+			return
+		else
+			slowdown_counter = 0
+		end
+	end
 
 	local last_breakpoint = current_breakpoint or 0
 	current_breakpoint = nil

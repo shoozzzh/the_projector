@@ -35,6 +35,14 @@ return {
 		["English"] = "Stepping......",
 		["简体中文"] = "步进中......",
 	},
+	checkbox_slowdown = {
+		["English"] = "Slowdown by",
+		["简体中文"] = "减速",
+	},
+	n_times = {
+		["English"] = "times",
+		["简体中文"] = "倍",
+	},
 	stop_stepping_button = {
 		["English"] = "Stop",
 		["简体中文"] = "停止",
@@ -51,7 +59,7 @@ return {
 		["English"] = "No.",
 		["简体中文"] = "序号",
 	},
-	column_enabled = {
+	column_state = {
 		["English"] = "State",
 		["简体中文"] = "状态",
 	},
