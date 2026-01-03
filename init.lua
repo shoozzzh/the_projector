@@ -39,6 +39,7 @@ local enable_breakpoints = true
 local update_breakpointed = {}
 local current_breakpoint = nil
 local num_updates = #updates.list
+local filter_update_list = ""
 
 local window_open_update_list = false
 local window_open_breakpoint_list = false
@@ -111,41 +112,56 @@ function show_gui()
 	end
 
 	if window_open_update_list and imgui.Begin( string.format( "%s - %s", text.title, text.title_update_list ) ) then
-		local table_flags = bit.bor( imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg )
-		if imgui.BeginTable( "updates_table", 4, table_flags ) then
-			imgui.TableSetupColumn( text.column_number, imgui.TableColumnFlags.WidthFixed )
-			imgui.TableSetupColumn( text.column_state, imgui.TableColumnFlags.WidthFixed )
-			imgui.TableSetupColumn( text.column_name, imgui.TableColumnFlags.WidthStretch, 6 )
-			imgui.TableSetupColumn( text.breakpoint_column, imgui.TableColumnFlags.WidthFixed )
-			imgui.TableHeadersRow()
+		if imgui.BeginChild( "update_list" ) then
+			imgui.Text( text.filter_update_list )
+			imgui.SameLine()
+			imgui.PushID( "filter_update_list" )
+			_, filter_update_list = imgui.InputText( "", filter_update_list )
+			imgui.PopID()
+			local table_flags = bit.bor( imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg )
+			if imgui.BeginTable( "updates_table", 4, table_flags ) then
+				imgui.TableSetupColumn( text.column_number, imgui.TableColumnFlags.WidthFixed )
+				imgui.TableSetupColumn( text.column_state, imgui.TableColumnFlags.WidthFixed )
+				imgui.TableSetupColumn( text.column_name, imgui.TableColumnFlags.WidthStretch, 6 )
+				imgui.TableSetupColumn( text.breakpoint_column, imgui.TableColumnFlags.WidthFixed )
+				imgui.TableHeadersRow()
 
-			for i, name in ipairs( updates.list ) do
-				imgui.PushID( name )
+				for i, name in ipairs( updates.list ) do
+					if filter_update_list ~= "" and not string.find( name:lower(), filter_update_list:lower(), 1, true ) then
+						goto continue
+					end
 
-				imgui.TableNextColumn()
-				imgui.Text( tostring( i ) )
 
-				imgui.TableNextColumn()
-				_, update_enabled[ i ] = imgui.Checkbox( "", update_enabled[ i ] )
-				if update_breakpointed[ i ] then
-					imgui.SameLine()
-					local image_breakpointed = imgui.LoadImage( mod_path .. "breakpointed.png" )
-					imgui.Image( image_breakpointed, 20, 20 )
+					imgui.PushID( name )
+
+					imgui.TableNextColumn()
+					imgui.Text( tostring( i ) )
+
+					imgui.TableNextColumn()
+					_, update_enabled[ i ] = imgui.Checkbox( "", update_enabled[ i ] )
+					if update_breakpointed[ i ] then
+						imgui.SameLine()
+						local image_breakpointed = imgui.LoadImage( mod_path .. "breakpointed.png" )
+						imgui.Image( image_breakpointed, 20, 20 )
+					end
+
+					imgui.TableNextColumn()
+					imgui.Text( name )
+
+					imgui.TableNextColumn()
+					_, update_breakpointed[ i ] = imgui.Checkbox( text.breakpoint_column, update_breakpointed[ i ] == true )
+
+					if i == current_breakpoint then
+						imgui.TableSetBgColor( imgui.TableBgTarget.RowBg1, 1, 0, 0, 1 )
+					end
+
+					imgui.PopID()
+
+					::continue::
 				end
-
-				imgui.TableNextColumn()
-				imgui.Text( name )
-
-				imgui.TableNextColumn()
-				_, update_breakpointed[ i ] = imgui.Checkbox( text.breakpoint_column, update_breakpointed[ i ] == true )
-
-				if i == current_breakpoint then
-					imgui.TableSetBgColor( imgui.TableBgTarget.RowBg1, 1, 0, 0, 1 )
-				end
-
-				imgui.PopID()
+				imgui.EndTable()
 			end
-			imgui.EndTable()
+			imgui.EndChild()
 		end
 		imgui.End()
 	end

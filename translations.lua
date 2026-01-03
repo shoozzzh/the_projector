@@ -71,6 +71,10 @@ return {
 		["English"] = "Breakpoint",
 		["简体中文"] = "断点",
 	},
+	filter_update_list = {
+		["English"] = "Filter: ",
+		["简体中文"] = "查找: ",
+	},
 	title_breakpoint_list = {
 		["English"] = "Breakpoints",
 		["简体中文"] = "断点列表",
