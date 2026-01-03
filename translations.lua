@@ -52,8 +52,8 @@ return {
 		["简体中文"] = "序号",
 	},
 	column_enabled = {
-		["English"] = "Enabled",
-		["简体中文"] = "启用",
+		["English"] = "State",
+		["简体中文"] = "状态",
 	},
 	column_name = {
 		["English"] = "Name",

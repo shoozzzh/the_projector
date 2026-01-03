@@ -111,6 +111,11 @@ function show_gui()
 
 				imgui.TableNextColumn()
 				_, update_enabled[ i ] = imgui.Checkbox( "", update_enabled[ i ] )
+				if update_breakpointed[ i ] then
+					imgui.SameLine()
+					local image_breakpointed = imgui.LoadImage( mod_path .. "breakpointed.png" )
+					imgui.Image( image_breakpointed, 20, 20 )
+				end
 
 				imgui.TableNextColumn()
 				imgui.Text( name )
@@ -118,8 +123,8 @@ function show_gui()
 				imgui.TableNextColumn()
 				_, update_breakpointed[ i ] = imgui.Checkbox( text.breakpoint_column, update_breakpointed[ i ] == true )
 
-				if update_breakpointed[ i ] then
-					imgui.TableSetBgColor( imgui.TableBgTarget.RowBg1, 0.5, 0.1, 0.1, 1 )
+				if i == current_breakpoint then
+					imgui.TableSetBgColor( imgui.TableBgTarget.RowBg1, 1, 0, 0, 1 )
 				end
 
 				imgui.PopID()
@@ -134,7 +139,7 @@ function show_gui()
 
 		for i, name in ipairs( updates.list ) do
 			if i == current_breakpoint then
-				imgui.TextColored( 0.1, 0.9, 0.1, 1, string.format( ">> %d. %s", i, name ) )
+				imgui.TextColored( 1, 0, 0, 1, string.format( ">> %d. %s", i, name ) )
 				empty = false
 			elseif update_breakpointed[ i ] then
 				imgui.Text( string.format( "%d. %s", i, name ) )
