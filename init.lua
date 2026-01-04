@@ -118,6 +118,7 @@ function show_gui()
 			imgui.PushID( "filter_update_list" )
 			_, filter_update_list = imgui.InputText( "", filter_update_list )
 			imgui.PopID()
+
 			local table_flags = bit.bor( imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg )
 			if imgui.BeginTable( "updates_table", 4, table_flags ) then
 				imgui.TableSetupColumn( text.column_number, imgui.TableColumnFlags.WidthFixed )
@@ -130,7 +131,6 @@ function show_gui()
 					if filter_update_list ~= "" and not string.find( name:lower(), filter_update_list:lower(), 1, true ) then
 						goto continue
 					end
-
 
 					imgui.PushID( name )
 
