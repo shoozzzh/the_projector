@@ -1,4 +1,6 @@
 # The Projector
+[English](README.md) | [简体中文](README_zhcn.md)
+
 A mod for researching Noita precisely in time. REQUIRES [Noita Dear ImGui](https://github.com/dextercd/Noita-Dear-ImGui) to work.
 
 # Features

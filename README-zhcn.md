@@ -1,4 +1,6 @@
 # 放映机
+[English](README.md) | [简体中文](README_zhcn.md)
+
 一个用于研究 Noita 中细微过程的模组。需要 [NoitaDearImGui](https://github.com/dextercd/Noita-Dear-ImGui) 作为前置。
 
 # 功能
