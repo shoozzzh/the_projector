@@ -9,9 +9,9 @@ A mod for researching Noita precisely in time. REQUIRES [Noita Dear ImGui](https
 - Slows down the game by certain times
 - Enable/Disable the updates of the game respectively
 - Set breakpoints for updates
-- Breakpoints are simulated by disabling updates, **not but close to** real breakpoints
+- Breakpoints are simulated by disabling updates; they are not actual breakpoints but approximate them closely
 
 # Credits
-- [NoitaPatcher](https://github.com/dextercd/NoitaPatcher) provides support for features about freezing the game.
-- [NoitaPatcherEx](https://github.com/XM666-Dev/NoitaPatcherEx) provides support for features about enabling/disabling updates.
+- [NoitaPatcher](https://github.com/dextercd/NoitaPatcher) provides support for implementing features related to freezing/unfreezing the game.
+- [NoitaPatcherEx](https://github.com/XM666-Dev/NoitaPatcherEx) provides support for implementing features related to enabling/disabling updates.
 - [NoitaDearImGui](https://github.com/dextercd/Noita-Dear-ImGui) provides a handy GUI framework.
