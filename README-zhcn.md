@@ -12,6 +12,6 @@
 - 断点通过禁用更新项目模拟出，**不是但接近**真正的断点
 
 # 鸣谢
-- [NoitaPatcher](https://github.com/dextercd/NoitaPatcher) 为暂停游戏相关功能的实现提供了基础。
-- [NoitaPatcherEx](https://github.com/XM666-Dev/NoitaPatcherEx) 为更新项目相关功能的实现提供了基础。
+- [NoitaPatcher](https://github.com/dextercd/NoitaPatcher) 为暂停游戏和更新项目相关功能的实现提供了基础。
+- [NoitaPatcherEx](https://github.com/XM666-Dev/NoitaPatcherEx) 为断点功能的实现提供了基础。
 - [NoitaDearImGui](https://github.com/dextercd/Noita-Dear-ImGui) 提供了方便的Gui框架。

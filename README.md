@@ -12,6 +12,6 @@ A mod for researching Noita precisely in time. REQUIRES [Noita Dear ImGui](https
 - Breakpoints are simulated by disabling updates; they are not actual breakpoints but approximate them closely
 
 # Credits
-- [NoitaPatcher](https://github.com/dextercd/NoitaPatcher) provides support for implementing features related to freezing/unfreezing the game.
-- [NoitaPatcherEx](https://github.com/XM666-Dev/NoitaPatcherEx) provides support for implementing features related to enabling/disabling updates.
+- [NoitaPatcher](https://github.com/dextercd/NoitaPatcher) provides support for implementing features related to freezing/unfreezing the game and enabling/disabling updates.
+- [NoitaPatcherEx](https://github.com/XM666-Dev/NoitaPatcherEx) provides support for implementing features related to breakpoints.
 - [NoitaDearImGui](https://github.com/dextercd/Noita-Dear-ImGui) provides a handy GUI framework.
