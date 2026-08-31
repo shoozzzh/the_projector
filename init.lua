@@ -1,27 +1,29 @@
 local mod_path = "mods/the_projector/"
 
-dofile_once( mod_path .. "NoitaPatcher/load.lua" )
-local np = require( "noitapatcher" )
+dofile_once(mod_path .. "NoitaPatcher/load.lua")
+local np = require("noitapatcher")
 
 function freeze()
-	np.SetPauseState( bit.bor( np.GetPauseState(), 1 ) )
+	np.SetPauseState(bit.bor(np.GetPauseState(), 1))
 end
+
 function unfreeze()
-	np.SetPauseState( bit.bor( np.GetPauseState(), 1 ) - 1 )
+	np.SetPauseState(bit.bor(np.GetPauseState(), 1) - 1)
 end
+
 function get_is_frozen()
 	return np.GetPauseState() % 2 == 1
 end
 
-local updates = dofile_once( mod_path .. "updates.lua" )
+local updates = dofile_once(mod_path .. "updates.lua")
 
 local text = {}
 do
-	local translations = dofile_once( mod_path .. "translations.lua" )
+	local translations = dofile_once(mod_path .. "translations.lua")
 	-- local current_lang = GameTextGet( "$current_language" )
-	for key, lang_table in pairs( translations ) do
+	for key, lang_table in pairs(translations) do
 		-- text[ key ] = lang_table[ current_lang ] or lang_table[ "English" ]
-		text[ key ] = lang_table[ "English" ]
+		text[key] = lang_table["English"]
 	end
 end
 
@@ -43,115 +45,125 @@ local filter_update_list = ""
 local window_open_update_list = false
 local window_open_breakpoint_list = false
 
-for i, _ in ipairs( updates.list ) do
-	update_enabled[ i ] = true
+for i, _ in ipairs(updates.list) do
+	update_enabled[i] = true
 end
 
 function show_gui()
-	if not ModSettingGet( "the_projector.gui_visible" ) then
+	if not ModSettingGet("the_projector.gui_visible") then
 		return
 	end
 
+	show_window_main()
+	show_window_update_list()
+	show_window_bp_list()
+
+	step_logic()
+end
+
+function show_window_main()
 	local is_frozen = get_is_frozen()
 
-	if imgui.Begin( text.title ) then
-		_, window_open_update_list = imgui.Checkbox( text.title_update_list, window_open_update_list )
+	if imgui.Begin(text.title) then
+		_, window_open_update_list = imgui.Checkbox(text.title_update_list, window_open_update_list)
 		imgui.SameLine()
-		_, window_open_breakpoint_list = imgui.Checkbox( text.title_breakpoint_list, window_open_breakpoint_list )
+		_, window_open_breakpoint_list = imgui.Checkbox(text.title_breakpoint_list, window_open_breakpoint_list)
 
 		imgui.Separator()
 
-		imgui.Text( text.current_frame )
+		imgui.Text(text.current_frame)
 		imgui.SameLine()
-		imgui.Text( string.format( "%.f", GameGetFrameNum() ) )
+		imgui.Text(string.format("%.f", GameGetFrameNum()))
 
-		imgui.Text( is_frozen and text.paused or text.not_paused )
+		imgui.Text(is_frozen and text.paused or text.not_paused)
 
 		if stepping_remaining_frames > 0 then
-			imgui.Text( text.stepping )
+			imgui.Text(text.stepping)
 			imgui.SameLine()
-			if imgui.Button( text.stop_stepping_button ) then
+			if imgui.Button(text.stop_stepping_button) then
 				stepping_remaining_frames = 0
 			end
 		elseif is_frozen then
-			if imgui.Button( text.button_unfreeze ) then
+			if imgui.Button(text.button_unfreeze) then
 				unfreeze()
 			end
 
-			if imgui.Button( text.step_by_button ) then
+			if imgui.Button(text.step_by_button) then
 				stepping_remaining_frames = step_by_n_frames
 				unfreeze()
 			end
 			imgui.SameLine()
 			imgui.SetNextItemWidth(120)
-			imgui.PushID( "stepping" )
-			_, step_by_n_frames = imgui.InputInt( "", step_by_n_frames )
+			imgui.PushID("stepping")
+			_, step_by_n_frames = imgui.InputInt("", step_by_n_frames)
 			imgui.PopID()
 			imgui.SameLine()
-			imgui.Text( text.n_frames )
+			imgui.Text(text.n_frames)
 
-			_, free_camera = imgui.Checkbox( text.free_camera, free_camera )
+			_, free_camera = imgui.Checkbox(text.free_camera, free_camera)
 		else
-			if imgui.Button( text.button_freeze ) then
+			if imgui.Button(text.button_freeze) then
 				freeze()
 			end
 		end
 
-		_, slowdown_enabled = imgui.Checkbox( text.checkbox_slowdown, slowdown_enabled )
+		_, slowdown_enabled = imgui.Checkbox(text.checkbox_slowdown, slowdown_enabled)
 		imgui.SameLine()
 		imgui.SetNextItemWidth(120)
-		imgui.PushID( "slowdown" )
-		_, slowdown_by_n_times = imgui.InputInt( "", slowdown_by_n_times )
-		slowdown_by_n_times = math.max( 2, slowdown_by_n_times )
+		imgui.PushID("slowdown")
+		_, slowdown_by_n_times = imgui.InputInt("", slowdown_by_n_times)
+		slowdown_by_n_times = math.max(2, slowdown_by_n_times)
 		imgui.PopID()
 		imgui.SameLine()
-		imgui.Text( text.n_times )
+		imgui.Text(text.n_times)
 
 		imgui.End()
 	end
+end
 
-	if window_open_update_list and imgui.Begin( string.format( "%s - %s", text.title, text.title_update_list ) ) then
-		if imgui.BeginChild( "update_list" ) then
-			imgui.Text( text.filter_update_list )
+function show_window_update_list()
+	if window_open_update_list and imgui.Begin(string.format("%s - %s", text.title, text.title_update_list)) then
+		if imgui.BeginChild("update_list") then
+			imgui.Text(text.filter_update_list)
 			imgui.SameLine()
-			imgui.PushID( "filter_update_list" )
-			_, filter_update_list = imgui.InputText( "", filter_update_list )
+			imgui.PushID("filter_update_list")
+			_, filter_update_list = imgui.InputText("", filter_update_list)
 			imgui.PopID()
 
-			local table_flags = bit.bor( imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg )
-			if imgui.BeginTable( "updates_table", 4, table_flags ) then
-				imgui.TableSetupColumn( text.column_number, imgui.TableColumnFlags.WidthFixed )
-				imgui.TableSetupColumn( text.column_state, imgui.TableColumnFlags.WidthFixed )
-				imgui.TableSetupColumn( text.column_name, imgui.TableColumnFlags.WidthStretch, 6 )
-				imgui.TableSetupColumn( text.breakpoint_column, imgui.TableColumnFlags.WidthFixed )
+			local table_flags = bit.bor(imgui.TableFlags.Resizable, imgui.TableFlags.Hideable, imgui.TableFlags.RowBg)
+			if imgui.BeginTable("updates_table", 4, table_flags) then
+				imgui.TableSetupColumn(text.column_number, imgui.TableColumnFlags.WidthFixed)
+				imgui.TableSetupColumn(text.column_state, imgui.TableColumnFlags.WidthFixed)
+				imgui.TableSetupColumn(text.column_name, imgui.TableColumnFlags.WidthStretch, 6)
+				imgui.TableSetupColumn(text.breakpoint_column, imgui.TableColumnFlags.WidthFixed)
 				imgui.TableHeadersRow()
 
-				for i, name in ipairs( updates.list ) do
-					if filter_update_list ~= "" and not string.find( name:lower(), filter_update_list:lower(), 1, true ) then
+				for i, name in ipairs(updates.list) do
+					if filter_update_list ~= "" and not string.find(name:lower(), filter_update_list:lower(), 1, true) then
 						goto continue
 					end
 
-					imgui.PushID( name )
+					imgui.PushID(name)
 
 					imgui.TableNextColumn()
-					imgui.Text( tostring( i ) )
+					imgui.Text(tostring(i))
 
 					imgui.TableNextColumn()
-					_, update_enabled[ i ] = imgui.Checkbox( "", update_enabled[ i ] )
-					if update_breakpointed[ i ] then
+					_, update_enabled[i] = imgui.Checkbox("", update_enabled[i])
+					if update_breakpointed[i] then
 						imgui.SameLine()
-						local image_breakpointed = imgui.LoadImage( mod_path .. "breakpointed.png" )
-						imgui.Image( image_breakpointed, 20, 20 )
+						local image_breakpointed = imgui.LoadImage(mod_path .. "breakpointed.png")
+						imgui.Image(image_breakpointed, 20, 20)
 					end
 
 					imgui.TableNextColumn()
-					imgui.Text( name )
+					imgui.Text(name)
 
 					imgui.TableNextColumn()
-					_, update_breakpointed[ i ] = imgui.Checkbox( text.breakpoint_column, update_breakpointed[ i ] == true )
+					_, update_breakpointed[i] = imgui.Checkbox(text.breakpoint_column, update_breakpointed[i] == true)
 
 					if i == current_breakpoint then
-						imgui.TableSetBgColor( imgui.TableBgTarget.RowBg1, 1, 0, 0, 1 )
+						imgui.TableSetBgColor(imgui.TableBgTarget.RowBg1, 1, 0, 0, 1)
 					end
 
 					imgui.PopID()
@@ -164,33 +176,33 @@ function show_gui()
 		end
 		imgui.End()
 	end
+end
 
-	if window_open_breakpoint_list and imgui.Begin( string.format( "%s - %s", text.title, text.title_breakpoint_list ) ) then
-		_, enable_breakpoints = imgui.Checkbox( text.checkbox_enable_breakpoints, enable_breakpoints )
+function show_window_bp_list()
+	if window_open_breakpoint_list and imgui.Begin(string.format("%s - %s", text.title, text.title_breakpoint_list)) then
+		_, enable_breakpoints = imgui.Checkbox(text.checkbox_enable_breakpoints, enable_breakpoints)
 
-		if imgui.BeginChild( "breakpoint_list" ) then
+		if imgui.BeginChild("breakpoint_list") then
 			local empty = true
 
-			for i, name in ipairs( updates.list ) do
+			for i, name in ipairs(updates.list) do
 				if i == current_breakpoint then
-					imgui.TextColored( 1, 0, 0, 1, string.format( ">> %d. %s", i, name ) )
+					imgui.TextColored(1, 0, 0, 1, string.format(">> %d. %s", i, name))
 					empty = false
-				elseif update_breakpointed[ i ] then
-					imgui.Text( string.format( "%d. %s", i, name ) )
+				elseif update_breakpointed[i] then
+					imgui.Text(string.format("%d. %s", i, name))
 					empty = false
 				end
 			end
 
 			if empty then
-				imgui.Text( "No breakpoints set." )
+				imgui.Text("No breakpoints set.")
 			end
 			imgui.EndChild()
 		end
 
 		imgui.End()
 	end
-
-	step_logic()
 end
 
 function step_logic()
@@ -213,24 +225,24 @@ local keycodes = {
 function free_camera_update()
 	local x, y = GameGetCameraPos()
 	local speed = 10
-	if InputIsKeyDown( keycodes.Key_w ) then
+	if InputIsKeyDown(keycodes.Key_w) then
 		y = y - speed
 	end
-	if InputIsKeyDown( keycodes.Key_s ) then
+	if InputIsKeyDown(keycodes.Key_s) then
 		y = y + speed
 	end
-	if InputIsKeyDown( keycodes.Key_a ) then
+	if InputIsKeyDown(keycodes.Key_a) then
 		x = x - speed
 	end
-	if InputIsKeyDown( keycodes.Key_d ) then
+	if InputIsKeyDown(keycodes.Key_d) then
 		x = x + speed
 	end
-	GameSetCameraPos( x, y )
+	GameSetCameraPos(x, y)
 end
 
 local function disable_all_updates()
-	for i, name in ipairs( updates.list ) do
-		updates.set_enabled( name, false )
+	for i, name in ipairs(updates.list) do
+		updates.set_enabled(name, false)
 	end
 end
 
@@ -251,15 +263,15 @@ function OnWorldPreUpdate()
 	current_breakpoint = nil
 	if enable_breakpoints then
 		for i = last_breakpoint + 1, num_updates do
-			if update_breakpointed[ i ] then
+			if update_breakpointed[i] then
 				current_breakpoint = i
 				break
 			end
 		end
 	end
 
-	for i, name in ipairs( updates.list ) do
-		local enabled = update_enabled[ i ]
+	for i, name in ipairs(updates.list) do
+		local enabled = update_enabled[i]
 
 		if last_breakpoint ~= nil then
 			enabled = enabled and last_breakpoint <= i
@@ -269,13 +281,14 @@ function OnWorldPreUpdate()
 			enabled = enabled and i < current_breakpoint
 		end
 
-		updates.set_enabled( name, enabled )
+		updates.set_enabled(name, enabled)
 	end
 
 	if current_breakpoint ~= nil then
 		freeze()
 	end
 end
+
 function OnPausePreUpdate()
 	if np.GetPauseState() <= 1 then
 		show_gui()
