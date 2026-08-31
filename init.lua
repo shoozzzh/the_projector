@@ -13,7 +13,6 @@ function get_is_frozen()
 	return np.GetPauseState() % 2 == 1
 end
 
-local systems = dofile_once( mod_path .. "systems.lua" )
 local updates = dofile_once( mod_path .. "updates.lua" )
 
 local text = {}
